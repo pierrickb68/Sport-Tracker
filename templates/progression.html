@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Progression — Soul Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Progression</h1>
+</div>
+
+{% if exercise_names %}
+<div class="chart-controls">
+  <div class="form-group">
+    <label for="exercise-select">Exercice</label>
+    <select id="exercise-select">
+      {% for name in exercise_names %}
+      <option value="{{ name }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="metric-select">Métrique</label>
+    <select id="metric-select">
+      <option value="max_weight">Poids maximum (kg)</option>
+      <option value="volume">Volume total (kg)</option>
+      <option value="avg_reps">Répétitions moyennes</option>
+    </select>
+  </div>
+</div>
+
+<div class="chart-container">
+  <canvas id="progression-chart"></canvas>
+  <div id="chart-loading" class="chart-loading">Chargement...</div>
+  <div id="chart-empty" class="chart-empty hidden">
+    <p>Pas assez de données pour afficher la progression.</p>
+    <p>Ajoute au moins 2 séances avec cet exercice.</p>
+  </div>
+</div>
+
+<div class="chart-stats" id="chart-stats"></div>
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">📈</div>
+  <h2>Pas encore de données</h2>
+  <p>Ajoute des séances pour voir ta progression.</p>
+  <a href="{{ url_for('add_session') }}" class="btn btn-primary">Ajouter une séance</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if exercise_names %}
+<script src="{{ url_for('static', filename='js/progression.js') }}"></script>
+{% endif %}
+{% endblock %}

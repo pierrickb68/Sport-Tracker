@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Historique — Soul Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Historique des séances</h1>
+  <a href="{{ url_for('add_session') }}" class="btn btn-primary">+ Nouvelle séance</a>
+</div>
+
+<div class="stats-grid" id="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value" id="stat-sessions">—</div>
+    <div class="stat-label">Séances</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="stat-sets">—</div>
+    <div class="stat-label">Séries totales</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="stat-volume">—</div>
+    <div class="stat-label">Volume total (kg)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="stat-top">—</div>
+    <div class="stat-label">Exercice favori</div>
+  </div>
+</div>
+
+{% if sessions %}
+<div class="sessions-list">
+  {% for session in sessions %}
+  <div class="session-card">
+    <div class="session-header">
+      <div class="session-date">
+        <span class="date-day">{{ session.date | replace('-', '/') }}</span>
+        {% if session.notes %}
+        <span class="session-notes">{{ session.notes }}</span>
+        {% endif %}
+      </div>
+      <div class="session-meta">
+        <span class="badge">{{ session.exercises | length }} exercice{% if session.exercises | length > 1 %}s{% endif %}</span>
+        <form method="POST" action="{{ url_for('delete_session', session_id=session.id) }}"
+              onsubmit="return confirm('Supprimer cette séance ?')">
+          <button type="submit" class="btn-delete" title="Supprimer">✕</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="exercises-grid">
+      {% for ex in session.exercises %}
+      <div class="exercise-item">
+        <div class="exercise-name">
+          {{ ex.name }}
+          {% if ex.get('unilateral') %}<span class="unilateral-badge">×2</span>{% endif %}
+        </div>
+        {% if ex.get('comment') %}
+        <div class="note-display exercise-note-display">{{ ex.comment }}</div>
+        {% endif %}
+        <div class="sets-list">
+          {% for s in ex.sets %}
+          <div class="set-entry">
+            <div class="set-tag">{{ s.reps }} × {{ s.weight | int if s.weight == s.weight | int else s.weight }} kg</div>
+            {% if s.get('comment') %}
+            <div class="note-display set-note-display">{{ s.comment }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% set mult = 2 if ex.get('unilateral') else 1 %}
+        {% set ns = namespace(vol=0, max_w=0) %}
+        {% for s in ex.sets %}
+          {% set ns.vol = ns.vol + s.weight * s.reps * mult %}
+          {% if s.weight > ns.max_w %}{% set ns.max_w = s.weight %}{% endif %}
+        {% endfor %}
+        <div class="exercise-summary">
+          Max : <strong>{{ ns.max_w | int if ns.max_w == ns.max_w | int else ns.max_w }} kg</strong>{% if ex.get('unilateral') %}<span class="per-side"> /côté</span>{% endif %}
+          &nbsp;·&nbsp; Volume : <strong>{{ ns.vol | int }} kg</strong>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">🏋️</div>
+  <h2>Aucune séance enregistrée</h2>
+  <p>Commence par ajouter ta première séance d'entraînement.</p>
+  <a href="{{ url_for('add_session') }}" class="btn btn-primary">Ajouter une séance</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch('/api/stats').then(r => r.json()).then(data => {
+  document.getElementById('stat-sessions').textContent = data.total_sessions;
+  document.getElementById('stat-sets').textContent = data.total_sets;
+  document.getElementById('stat-volume').textContent = data.total_volume.toLocaleString('fr-FR');
+  document.getElementById('stat-top').textContent = data.top_exercise || '—';
+});
+</script>
+{% endblock %}

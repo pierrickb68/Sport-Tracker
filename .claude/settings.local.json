@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\Pierrick\\\\sport-tracker\" -ErrorAction SilentlyContinue; if \\(-not \\(Test-Path \"C:\\\\Users\\\\Pierrick\\\\sport-tracker\"\\)\\) { Write-Host \"Directory does not exist\" })"
+    ]
+  }
+}

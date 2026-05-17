@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Nouvelle séance — Soul Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Nouvelle séance</h1>
+</div>
+
+<div class="form-container">
+  <form id="session-form">
+    <div class="form-group">
+      <label for="date">Date</label>
+      <input type="date" id="date" name="date" value="{{ today }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="notes">Notes (optionnel)</label>
+      <input type="text" id="notes" name="notes" placeholder="Ex : Push day, Full body...">
+    </div>
+
+    <div class="section-title">
+      <h2>Exercices</h2>
+      <button type="button" id="add-exercise-btn" class="btn btn-secondary">+ Exercice</button>
+    </div>
+
+    <div id="exercises-container"></div>
+
+    <div class="form-actions">
+      <a href="{{ url_for('index') }}" class="btn btn-ghost">Annuler</a>
+      <button type="submit" class="btn btn-primary" id="submit-btn">Enregistrer la séance</button>
+    </div>
+  </form>
+</div>
+
+<template id="exercise-template">
+  <div class="exercise-block" data-exercise-index="">
+    <div class="exercise-block-header">
+      <div class="exercise-name-row">
+        <input type="text" class="exercise-name-input" placeholder="Nom de l'exercice (ex : Développé couché)" list="exercises-datalist" required>
+        <button type="button" class="btn-remove-exercise" title="Supprimer l'exercice">✕</button>
+      </div>
+      <div class="exercise-options">
+        <label class="checkbox-label">
+          <input type="checkbox" class="unilateral-checkbox">
+          <span>Unilatéral</span>
+          <span class="option-hint">× 2 sur le volume</span>
+        </label>
+        <button type="button" class="btn-note exercise-note-btn">✎ Note</button>
+      </div>
+      <div class="note-area hidden">
+        <input type="text" class="exercise-note-input" placeholder="Ressenti, technique, notes sur l'exercice...">
+      </div>
+    </div>
+    <div class="sets-container">
+      <div class="sets-header">
+        <span>Série</span>
+        <span>Répétitions</span>
+        <span>Poids (kg)</span>
+        <span></span>
+      </div>
+    </div>
+    <button type="button" class="btn-add-set">+ Série</button>
+  </div>
+</template>
+
+<template id="set-template">
+  <div class="set-wrapper">
+    <div class="set-row">
+      <span class="set-number"></span>
+      <input type="number" class="set-reps" placeholder="10" min="1" max="100" required>
+      <input type="number" class="set-weight" placeholder="0" min="0" max="999" step="0.5" required>
+      <div class="set-actions">
+        <button type="button" class="btn-note btn-set-note" title="Ajouter une note">✎</button>
+        <button type="button" class="btn-remove-set" title="Supprimer">✕</button>
+      </div>
+    </div>
+    <div class="set-note-area hidden">
+      <input type="text" class="set-note-input" placeholder="Ressenti pour cette série...">
+    </div>
+  </div>
+</template>
+
+<datalist id="exercises-datalist">
+  <option value="Développé couché">
+  <option value="Développé incliné">
+  <option value="Développé décliné">
+  <option value="Squat">
+  <option value="Leg press">
+  <option value="Soulevé de terre">
+  <option value="Tirage vertical">
+  <option value="Rowing barre">
+  <option value="Rowing haltère">
+  <option value="Curl biceps barre">
+  <option value="Curl biceps haltère">
+  <option value="Extension triceps poulie">
+  <option value="Dips">
+  <option value="Développé militaire">
+  <option value="Élévations latérales">
+  <option value="Élévations frontales">
+  <option value="Hip thrust">
+  <option value="Fentes">
+  <option value="Leg curl">
+  <option value="Leg extension">
+  <option value="Mollets debout">
+  <option value="Abdos">
+  <option value="Planche">
+</datalist>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/add_session.js') }}"></script>
+{% endblock %}
