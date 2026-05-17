@@ -1,18 +1,73 @@
 import json
 import os
+import re
 import uuid
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session as flask_session
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'soul-tracker-dev-secret-2024')
 
-DATA_FILE = os.path.join(os.path.dirname(__file__), "data", "sessions.json")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
+
+# ── Profile helpers ──────────────────────────────────────────────────────────
+
+def get_profiles():
+    profiles = []
+    if not os.path.exists(DATA_DIR):
+        return profiles
+    for f in sorted(os.listdir(DATA_DIR)):
+        if f.startswith("sessions_") and f.endswith(".json"):
+            name = f[9:-5]
+            if not name:
+                continue
+            path = os.path.join(DATA_DIR, f)
+            try:
+                with open(path, "r", encoding="utf-8") as fp:
+                    count = len(json.load(fp))
+            except Exception:
+                count = 0
+            profiles.append({"name": name, "count": count})
+    return profiles
+
+
+def get_data_file(profile):
+    return os.path.join(DATA_DIR, f"sessions_{profile}.json")
+
+
+def sanitize_name(name):
+    name = name.strip()
+    # Keep Unicode letters, digits, hyphen — strip everything else (incl. spaces)
+    name = re.sub(r'[^\w\-]', '', name)
+    return name[:30]
+
+
+def require_profile(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not flask_session.get('profile'):
+            return redirect(url_for('profiles'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.context_processor
+def inject_profile():
+    return {'current_profile': flask_session.get('profile')}
+
+
+# ── Data I/O ─────────────────────────────────────────────────────────────────
 
 def load_sessions():
-    if not os.path.exists(DATA_FILE):
+    profile = flask_session.get('profile')
+    if not profile:
         return []
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
+    path = get_data_file(profile)
+    if not os.path.exists(path):
+        return []
+    with open(path, "r", encoding="utf-8") as f:
         try:
             return json.load(f)
         except json.JSONDecodeError:
@@ -20,11 +75,48 @@ def load_sessions():
 
 
 def save_sessions(sessions):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
+    profile = flask_session.get('profile')
+    if not profile:
+        return
+    path = get_data_file(profile)
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(sessions, f, ensure_ascii=False, indent=2)
 
 
+# ── Profile routes ────────────────────────────────────────────────────────────
+
+@app.route("/profiles")
+def profiles():
+    return render_template("profiles.html", profiles=get_profiles())
+
+
+@app.route("/profiles/select", methods=["POST"])
+def select_profile():
+    name = request.form.get("name", "").strip()
+    valid = [p["name"] for p in get_profiles()]
+    if name and name in valid:
+        flask_session['profile'] = name
+    return redirect(url_for('index'))
+
+
+@app.route("/profiles/new", methods=["POST"])
+def new_profile():
+    name = sanitize_name(request.form.get("name", ""))
+    if name:
+        path = get_data_file(name)
+        if not os.path.exists(path):
+            os.makedirs(DATA_DIR, exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump([], f)
+        flask_session['profile'] = name
+        return redirect(url_for('index'))
+    return redirect(url_for('profiles'))
+
+
+# ── App routes ────────────────────────────────────────────────────────────────
+
 @app.route("/")
+@require_profile
 def index():
     sessions = load_sessions()
     sessions_sorted = sorted(sessions, key=lambda s: s["date"], reverse=True)
@@ -32,6 +124,7 @@ def index():
 
 
 @app.route("/add", methods=["GET", "POST"])
+@require_profile
 def add_session():
     if request.method == "POST":
         data = request.get_json()
@@ -71,6 +164,7 @@ def add_session():
 
 
 @app.route("/session/<session_id>/delete", methods=["POST"])
+@require_profile
 def delete_session(session_id):
     sessions = load_sessions()
     sessions = [s for s in sessions if s["id"] != session_id]
@@ -79,6 +173,7 @@ def delete_session(session_id):
 
 
 @app.route("/progression")
+@require_profile
 def progression():
     sessions = load_sessions()
     exercise_names = set()
@@ -90,6 +185,7 @@ def progression():
 
 
 @app.route("/api/progression/<exercise_name>")
+@require_profile
 def api_progression(exercise_name):
     sessions = load_sessions()
     sessions_sorted = sorted(sessions, key=lambda s: s["date"])
@@ -114,6 +210,7 @@ def api_progression(exercise_name):
 
 
 @app.route("/api/exercises")
+@require_profile
 def api_exercises():
     sessions = load_sessions()
     exercise_names = set()
@@ -124,6 +221,7 @@ def api_exercises():
 
 
 @app.route("/api/stats")
+@require_profile
 def api_stats():
     sessions = load_sessions()
     total_sessions = len(sessions)

@@ -1,0 +1,250 @@
+[
+  {
+    "id": "c7c3eeb2-1203-45a4-9103-b1a032b9bf03",
+    "date": "2026-05-14",
+    "notes": "Push A ",
+    "exercises": [
+      {
+        "name": "Développé incliné à la smyth machine",
+        "sets": [
+          {
+            "reps": 6,
+            "weight": 60.0
+          },
+          {
+            "reps": 8,
+            "weight": 50.0
+          },
+          {
+            "reps": 10,
+            "weight": 40.0
+          }
+        ]
+      },
+      {
+        "name": "Tirage horizontale machine hammer",
+        "sets": [
+          {
+            "reps": 14,
+            "weight": 35.0
+          },
+          {
+            "reps": 11,
+            "weight": 35.0
+          },
+          {
+            "reps": 8,
+            "weight": 35.0
+          }
+        ]
+      },
+      {
+        "name": "tractions avec aide élastique rouge",
+        "sets": [
+          {
+            "reps": 12,
+            "weight": 0.0
+          },
+          {
+            "reps": 10,
+            "weight": 0.0
+          },
+          {
+            "reps": 8,
+            "weight": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Élévations latérales",
+        "sets": [
+          {
+            "reps": 15,
+            "weight": 7.5
+          },
+          {
+            "reps": 15,
+            "weight": 7.5
+          },
+          {
+            "reps": 15,
+            "weight": 5.0
+          }
+        ]
+      },
+      {
+        "name": "Dips",
+        "sets": [
+          {
+            "reps": 13,
+            "weight": 0.0
+          },
+          {
+            "reps": 13,
+            "weight": 0.0
+          },
+          {
+            "reps": 13,
+            "weight": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Curl biceps haltère",
+        "sets": [
+          {
+            "reps": 12,
+            "weight": 10.0
+          },
+          {
+            "reps": 10,
+            "weight": 10.0
+          },
+          {
+            "reps": 10,
+            "weight": 8.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2f236167-0a99-47e5-b182-d4678661e715",
+    "date": "2026-05-17",
+    "notes": "Push A",
+    "exercises": [
+      {
+        "name": "Développé couché machine hammer (couché)",
+        "unilateral": false,
+        "comment": "",
+        "sets": [
+          {
+            "reps": 12,
+            "weight": 70.0,
+            "comment": ""
+          },
+          {
+            "reps": 10,
+            "weight": 70.0,
+            "comment": ""
+          },
+          {
+            "reps": 9,
+            "weight": 70.0,
+            "comment": ""
+          }
+        ]
+      },
+      {
+        "name": "Tirage horizontale pouli",
+        "unilateral": false,
+        "comment": "",
+        "sets": [
+          {
+            "reps": 12,
+            "weight": 50.0,
+            "comment": ""
+          },
+          {
+            "reps": 10,
+            "weight": 50.0,
+            "comment": ""
+          },
+          {
+            "reps": 10,
+            "weight": 45.0,
+            "comment": ""
+          }
+        ]
+      },
+      {
+        "name": "Tractions",
+        "unilateral": false,
+        "comment": "Sans élastique",
+        "sets": [
+          {
+            "reps": 6,
+            "weight": 0.0,
+            "comment": ""
+          },
+          {
+            "reps": 6,
+            "weight": 0.0,
+            "comment": ""
+          },
+          {
+            "reps": 5,
+            "weight": 0.0,
+            "comment": ""
+          }
+        ]
+      },
+      {
+        "name": "Élévations latérales machine hammer",
+        "unilateral": true,
+        "comment": "",
+        "sets": [
+          {
+            "reps": 15,
+            "weight": 7.5,
+            "comment": ""
+          },
+          {
+            "reps": 13,
+            "weight": 7.5,
+            "comment": ""
+          },
+          {
+            "reps": 15,
+            "weight": 5.0,
+            "comment": ""
+          }
+        ]
+      },
+      {
+        "name": "Dips",
+        "unilateral": false,
+        "comment": "",
+        "sets": [
+          {
+            "reps": 13,
+            "weight": 5.0,
+            "comment": ""
+          },
+          {
+            "reps": 12,
+            "weight": 5.0,
+            "comment": ""
+          },
+          {
+            "reps": 10,
+            "weight": 5.0,
+            "comment": ""
+          }
+        ]
+      },
+      {
+        "name": "Facepull",
+        "unilateral": false,
+        "comment": "",
+        "sets": [
+          {
+            "reps": 12,
+            "weight": 12.5,
+            "comment": ""
+          },
+          {
+            "reps": 12,
+            "weight": 12.5,
+            "comment": ""
+          },
+          {
+            "reps": 12,
+            "weight": 12.5,
+            "comment": ""
+          }
+        ]
+      }
+    ]
+  }
+]

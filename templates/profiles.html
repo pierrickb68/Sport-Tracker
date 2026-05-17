@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Choisir un profil — Soul Tracker{% endblock %}
+
+{% block content %}
+<div class="profiles-screen">
+
+  <div class="profiles-header">
+    <h1 class="profiles-title">Qui s'entraîne ?</h1>
+    <p class="profiles-subtitle">Sélectionnez votre profil pour accéder à vos données</p>
+  </div>
+
+  <div class="profiles-grid">
+    {% for profile in profiles %}
+    <form method="POST" action="{{ url_for('select_profile') }}" style="display:contents">
+      <input type="hidden" name="name" value="{{ profile.name }}">
+      <button type="submit" class="profile-card{% if current_profile == profile.name %} profile-card-active{% endif %}">
+        <div class="profile-avatar">{{ profile.name[0].upper() }}</div>
+        <div class="profile-name">{{ profile.name }}</div>
+        <div class="profile-count">{{ profile.count }} séance{% if profile.count != 1 %}s{% endif %}</div>
+      </button>
+    </form>
+    {% endfor %}
+
+    <button type="button" class="profile-card profile-card-new" id="btn-new-profile">
+      <div class="profile-avatar profile-avatar-new">＋</div>
+      <div class="profile-name">Nouveau profil</div>
+      <div class="profile-count">&nbsp;</div>
+    </button>
+  </div>
+
+  <div id="new-profile-form" class="new-profile-form hidden">
+    <form method="POST" action="{{ url_for('new_profile') }}">
+      <div class="new-profile-inner">
+        <input type="text" name="name" id="new-profile-name" class="profile-input"
+               placeholder="Entrez votre prénom…" maxlength="30" autocomplete="off">
+        <button type="submit" class="btn btn-primary">Créer</button>
+        <button type="button" class="btn btn-ghost" id="btn-cancel-new">Annuler</button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const btn     = document.getElementById('btn-new-profile');
+  const cancel  = document.getElementById('btn-cancel-new');
+  const form    = document.getElementById('new-profile-form');
+  const input   = document.getElementById('new-profile-name');
+
+  function show() {
+    form.classList.remove('hidden');
+    btn.classList.add('active');
+    input.focus();
+  }
+  function hide() {
+    form.classList.add('hidden');
+    btn.classList.remove('active');
+    input.value = '';
+  }
+
+  btn.addEventListener('click', function () {
+    form.classList.contains('hidden') ? show() : hide();
+  });
+  cancel.addEventListener('click', hide);
+
+  // Submit on Enter
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') hide();
+  });
+})();
+</script>
+{% endblock %}

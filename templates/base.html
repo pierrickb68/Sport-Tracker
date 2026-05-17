@@ -121,18 +121,27 @@
 
   <!-- ═══ NAVBAR ═══ -->
   <nav class="navbar">
-    <a href="{{ url_for('index') }}" class="nav-brand">
+    <a href="{{ url_for('index') if current_profile else url_for('profiles') }}" class="nav-brand">
       <span class="nav-icon">⚔</span>
       <div class="nav-brand-text">
         <span class="nav-title">Soul Tracker</span>
         <span class="nav-subtitle">護廷十三隊 · 霊圧追跡</span>
       </div>
     </a>
+    {% if current_profile %}
     <ul class="nav-links">
       <li><a href="{{ url_for('index') }}"       class="{% if request.endpoint == 'index' %}active{% endif %}">Historique</a></li>
       <li><a href="{{ url_for('add_session') }}" class="{% if request.endpoint == 'add_session' %}active{% endif %}">+ Séance</a></li>
       <li><a href="{{ url_for('progression') }}" class="{% if request.endpoint == 'progression' %}active{% endif %}">Progression</a></li>
+      <li class="nav-sep" aria-hidden="true"></li>
+      <li>
+        <a href="{{ url_for('profiles') }}" class="nav-profile-link {% if request.endpoint == 'profiles' %}active{% endif %}">
+          <span class="nav-profile-initial">{{ current_profile[0].upper() }}</span>
+          <span>{{ current_profile }}</span>
+        </a>
+      </li>
     </ul>
+    {% endif %}
   </nav>
 
   <main class="main-content">
