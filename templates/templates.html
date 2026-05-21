@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Templates de séance — Soul Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Templates de séance</h1>
+  <a href="{{ url_for('templates_new') }}" class="btn btn-primary">+ Nouveau template</a>
+</div>
+
+{% if templates %}
+<div class="sessions-list">
+  {% for tmpl in templates %}
+  <div class="session-card">
+    <div class="session-header">
+      <div class="session-date">
+        <span class="date-day">{{ tmpl.name }}</span>
+        <span class="session-notes">{{ tmpl.exercises | length }} exercice{% if tmpl.exercises | length > 1 %}s{% endif %}</span>
+      </div>
+      <div class="session-meta">
+        <a href="{{ url_for('templates_edit', template_id=tmpl.id) }}" class="btn-edit" title="Modifier">✎ Modifier</a>
+        <form method="POST" action="{{ url_for('templates_delete', template_id=tmpl.id) }}"
+              onsubmit="return confirm('Supprimer ce template ?')">
+          <button type="submit" class="btn-delete" title="Supprimer">✕</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="exercises-grid">
+      {% for ex in tmpl.exercises %}
+      <div class="exercise-item">
+        <div class="exercise-name">
+          {{ ex.name }}
+          {% if ex.get('unilateral') %}<span class="unilateral-badge">×2</span>{% endif %}
+        </div>
+        {% if ex.get('comment') %}
+        <div class="note-display exercise-note-display">{{ ex.comment }}</div>
+        {% endif %}
+        <div class="sets-list">
+          {% for s in ex.sets %}
+          <span class="set-tag">{{ s.reps }} × {{ s.weight | int if s.weight == s.weight | int else s.weight }} kg</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">📋</div>
+  <h2>Aucun template enregistré</h2>
+  <p>Crée un template pour démarrer rapidement tes séances récurrentes.</p>
+  <a href="{{ url_for('templates_new') }}" class="btn btn-primary">Créer un template</a>
+</div>
+{% endif %}
+{% endblock %}

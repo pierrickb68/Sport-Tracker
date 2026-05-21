@@ -1,22 +1,64 @@
 {% extends "base.html" %}
-{% block title %}Nouvelle séance — Soul Tracker{% endblock %}
+{% set mode = mode | default('new') %}
+{% block title %}
+  {% if mode == 'edit' %}Modifier la séance
+  {% elif mode == 'template_edit' %}Modifier le template
+  {% elif mode == 'template_new' %}Nouveau template
+  {% else %}Nouvelle séance
+  {% endif %} — Soul Tracker
+{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <h1>Nouvelle séance</h1>
+  <h1>
+    {% if mode == 'edit' %}Modifier la séance
+    {% elif mode == 'template_edit' %}Modifier le template
+    {% elif mode == 'template_new' %}Nouveau template
+    {% else %}Nouvelle séance
+    {% endif %}
+  </h1>
 </div>
 
 <div class="form-container">
+  {% if mode in ['template_new', 'template_edit'] %}
+  <div class="form-group">
+    <label for="template-name">Nom du template</label>
+    <input type="text" id="template-name" name="template-name"
+           placeholder="Ex : Push A, Full Body, Leg Day..."
+           value="{{ template_data.name if template_data else '' }}" required>
+  </div>
+  {% endif %}
+
   <form id="session-form">
+    {% if mode not in ['template_new', 'template_edit'] %}
     <div class="form-group">
       <label for="date">Date</label>
-      <input type="date" id="date" name="date" value="{{ today }}" required>
+      <input type="date" id="date" name="date"
+             value="{{ session_data.date if session_data else today }}" required>
     </div>
 
     <div class="form-group">
       <label for="notes">Notes (optionnel)</label>
-      <input type="text" id="notes" name="notes" placeholder="Ex : Push day, Full body...">
+      <input type="text" id="notes" name="notes"
+             placeholder="Ex : Push day, Full body..."
+             value="{{ session_data.notes if session_data else '' }}">
     </div>
+    {% endif %}
+
+    {% if mode == 'new' %}
+    <div class="template-loader" id="template-loader">
+      <button type="button" id="template-loader-btn" class="btn-template-load">
+        ⚡ Partir d'un template
+      </button>
+      <div id="template-picker" class="template-picker hidden">
+        <select id="template-select" class="template-select">
+          <option value="">— Choisir un template —</option>
+        </select>
+        <button type="button" id="apply-template-btn" class="btn btn-secondary">Charger</button>
+        <button type="button" id="cancel-template-btn" class="btn btn-ghost">Annuler</button>
+      </div>
+    </div>
+    {% endif %}
 
     <div class="section-title">
       <h2>Exercices</h2>
@@ -26,12 +68,44 @@
     <div id="exercises-container"></div>
 
     <div class="form-actions">
+      {% if mode in ['template_new', 'template_edit'] %}
+      <a href="{{ url_for('templates_page') }}" class="btn btn-ghost">Annuler</a>
+      {% else %}
       <a href="{{ url_for('index') }}" class="btn btn-ghost">Annuler</a>
-      <button type="submit" class="btn btn-primary" id="submit-btn">Enregistrer la séance</button>
+      {% endif %}
+
+      {% if mode not in ['template_new', 'template_edit'] %}
+      <button type="button" id="save-template-btn" class="btn btn-secondary">☆ Template</button>
+      {% endif %}
+
+      <button type="submit" class="btn btn-primary" id="submit-btn">
+        {% if mode == 'edit' %}Enregistrer les modifications
+        {% elif mode in ['template_new', 'template_edit'] %}Sauvegarder le template
+        {% else %}Enregistrer la séance
+        {% endif %}
+      </button>
     </div>
   </form>
 </div>
 
+<!-- Save-as-template modal (new/edit session modes only) -->
+{% if mode not in ['template_new', 'template_edit'] %}
+<div id="save-template-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <h3 class="modal-title">Sauvegarder comme template</h3>
+    <div class="form-group">
+      <label for="new-template-name">Nom du template</label>
+      <input type="text" id="new-template-name" placeholder="Ex : Push A, Jambes, Full Body...">
+    </div>
+    <div class="modal-actions">
+      <button type="button" id="modal-cancel" class="btn btn-ghost">Annuler</button>
+      <button type="button" id="modal-confirm" class="btn btn-primary">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Templates ────────────────────────────────────────── -->
 <template id="exercise-template">
   <div class="exercise-block" data-exercise-index="">
     <div class="exercise-block-header">
@@ -104,7 +178,34 @@
   <option value="Mollets debout">
   <option value="Abdos">
   <option value="Planche">
+  <option value="Face pull">
+  <option value="Oiseau haltère">
+  <option value="Pec deck">
+  <option value="Pull-over">
+  <option value="Traction">
+  <option value="Curl marteau">
+  <option value="Skull crusher">
+  <option value="Développé haltères">
+  <option value="Shrug">
+  <option value="Good morning">
+  <option value="Romanian deadlift">
+  <option value="Bulgarian split squat">
+  <option value="Calf press">
 </datalist>
+
+<!-- Pass config to JS -->
+<script>
+window.FORM_CONFIG = {
+  mode: {{ mode | tojson }},
+  {% if mode == 'edit' and session_data %}
+  sessionId: {{ session_data.id | tojson }},
+  sessionData: {{ session_data | tojson }},
+  {% elif mode == 'template_edit' and template_data %}
+  templateId: {{ template_data.id | tojson }},
+  templateData: {{ template_data | tojson }},
+  {% endif %}
+};
+</script>
 {% endblock %}
 
 {% block scripts %}

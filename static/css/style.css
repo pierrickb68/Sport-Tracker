@@ -1293,6 +1293,131 @@ body {
 }
 .profile-input::placeholder { color: var(--text-muted); }
 
+/* ══ EDIT BUTTON ════════════════════════════════════ */
+.btn-edit {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.28rem 0.55rem;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  font-family: var(--f-stat);
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  transition: all var(--t);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.btn-edit:hover { color: var(--gold-light); background: var(--gold-dim); border: none; }
+
+/* ══ TEMPLATE LOADER ════════════════════════════════ */
+.template-loader {
+  margin-bottom: 1.8rem;
+}
+
+.btn-template-load {
+  background: transparent;
+  border: 1px dashed var(--border-up);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius);
+  font-family: var(--f-stat);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all var(--t);
+  width: 100%;
+}
+.btn-template-load:hover {
+  color: var(--gold-light);
+  border-color: var(--gold);
+  background: var(--gold-dim);
+}
+
+.template-picker {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  background: var(--black-card);
+  border: 1px solid var(--border-up);
+  border-top: 2px solid var(--gold);
+  border-radius: var(--radius);
+  animation: shonen-enter 0.25s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+.template-select {
+  flex: 1;
+  min-width: 0;
+  background: var(--black-raise);
+  border: 1px solid var(--border-up);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 0.52rem 0.8rem;
+  font-size: 0.88rem;
+  font-family: var(--f-body);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--t);
+  /* Make it big enough on mobile */
+  min-height: 44px;
+}
+.template-select:focus { border-color: var(--gold); }
+.template-select option { background: var(--black-card); }
+
+/* ══ MODAL ══════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-box {
+  background: var(--black-card);
+  border: 1px solid var(--border-up);
+  border-top: 2px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 1.8rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  animation: shonen-enter 0.3s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+.modal-title {
+  font-family: var(--f-title);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--white);
+  margin-bottom: 1.2rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  margin-top: 1.2rem;
+}
+
 /* ══ RESPONSIVE ════════════════════════════════════ */
 @media (max-width: 860px) {
   .shinigami-bg { width: 200px; }
@@ -1311,4 +1436,9 @@ body {
   .profile-card      { width: 120px; padding: 1.4rem 1rem 1rem; }
   .profile-avatar    { width: 48px; height: 48px; font-size: 1.3rem; }
   .new-profile-inner { flex-wrap: wrap; }
+  .template-picker   { flex-direction: column; }
+  .template-select   { width: 100%; }
+  /* Larger touch targets for exercise autocomplete on mobile */
+  .exercise-name-input { min-height: 44px; font-size: 1rem !important; }
+  .template-select, .btn-template-load { min-height: 44px; }
 }

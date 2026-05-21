@@ -83,6 +83,47 @@ def save_sessions(sessions):
         json.dump(sessions, f, ensure_ascii=False, indent=2)
 
 
+# ── Templates I/O ─────────────────────────────────────────────────────────────
+
+def load_templates():
+    profile = flask_session.get('profile')
+    if not profile:
+        return []
+    path = os.path.join(DATA_DIR, f"templates_{profile}.json")
+    if not os.path.exists(path):
+        return []
+    with open(path, "r", encoding="utf-8") as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return []
+
+
+def save_templates(templates):
+    profile = flask_session.get('profile')
+    if not profile:
+        return
+    path = os.path.join(DATA_DIR, f"templates_{profile}.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(templates, f, ensure_ascii=False, indent=2)
+
+
+def build_exercise_from_data(ex):
+    exercise = {
+        "name": ex["name"].strip(),
+        "unilateral": bool(ex.get("unilateral", False)),
+        "comment": ex.get("comment", "").strip(),
+        "sets": []
+    }
+    for s in ex.get("sets", []):
+        exercise["sets"].append({
+            "reps": int(s["reps"]),
+            "weight": float(s["weight"]),
+            "comment": s.get("comment", "").strip()
+        })
+    return exercise
+
+
 # ── Profile routes ────────────────────────────────────────────────────────────
 
 @app.route("/profiles")
@@ -138,18 +179,7 @@ def add_session():
         }
 
         for ex in data.get("exercises", []):
-            exercise = {
-                "name": ex["name"].strip(),
-                "unilateral": bool(ex.get("unilateral", False)),
-                "comment": ex.get("comment", "").strip(),
-                "sets": []
-            }
-            for s in ex.get("sets", []):
-                exercise["sets"].append({
-                    "reps": int(s["reps"]),
-                    "weight": float(s["weight"]),
-                    "comment": s.get("comment", "").strip()
-                })
+            exercise = build_exercise_from_data(ex)
             if exercise["name"] and exercise["sets"]:
                 session["exercises"].append(exercise)
 
@@ -160,7 +190,38 @@ def add_session():
         return jsonify({"success": False, "error": "Aucun exercice valide"}), 400
 
     today = datetime.now().strftime("%Y-%m-%d")
-    return render_template("add_session.html", today=today)
+    return render_template("add_session.html", today=today, mode="new")
+
+
+@app.route("/session/<session_id>/edit", methods=["GET", "POST"])
+@require_profile
+def edit_session(session_id):
+    sessions = load_sessions()
+    sess = next((s for s in sessions if s["id"] == session_id), None)
+    if not sess:
+        return redirect(url_for("index"))
+
+    if request.method == "POST":
+        data = request.get_json()
+        updated = {
+            "id": session_id,
+            "date": data["date"],
+            "notes": data.get("notes", ""),
+            "exercises": []
+        }
+        for ex in data.get("exercises", []):
+            exercise = build_exercise_from_data(ex)
+            if exercise["name"] and exercise["sets"]:
+                updated["exercises"].append(exercise)
+
+        if updated["exercises"]:
+            sessions = [updated if s["id"] == session_id else s for s in sessions]
+            save_sessions(sessions)
+            return jsonify({"success": True})
+        return jsonify({"success": False, "error": "Aucun exercice valide"}), 400
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    return render_template("add_session.html", today=today, mode="edit", session_data=sess)
 
 
 @app.route("/session/<session_id>/delete", methods=["POST"])
@@ -250,6 +311,121 @@ def api_stats():
         "total_volume": round(total_volume),
         "top_exercise": top_exercise
     })
+
+
+@app.route("/templates")
+@require_profile
+def templates_page():
+    return render_template("templates.html", templates=load_templates())
+
+
+@app.route("/templates/new", methods=["GET"])
+@require_profile
+def templates_new():
+    today = datetime.now().strftime("%Y-%m-%d")
+    return render_template("add_session.html", today=today, mode="template_new", session_data=None, template_data=None)
+
+
+@app.route("/templates/new", methods=["POST"])
+@require_profile
+def templates_new_post():
+    data = request.get_json()
+    name = data.get("name", "").strip()
+    if not name:
+        return jsonify({"success": False, "error": "Nom du template requis"}), 400
+
+    tmpl = {"id": str(uuid.uuid4()), "name": name, "exercises": []}
+    for ex in data.get("exercises", []):
+        exercise = build_exercise_from_data(ex)
+        if exercise["name"] and exercise["sets"]:
+            tmpl["exercises"].append(exercise)
+
+    if not tmpl["exercises"]:
+        return jsonify({"success": False, "error": "Aucun exercice valide"}), 400
+
+    all_templates = load_templates()
+    all_templates.append(tmpl)
+    save_templates(all_templates)
+    return jsonify({"success": True, "id": tmpl["id"]})
+
+
+@app.route("/templates/<template_id>/edit", methods=["GET"])
+@require_profile
+def templates_edit(template_id):
+    all_templates = load_templates()
+    tmpl = next((t for t in all_templates if t["id"] == template_id), None)
+    if not tmpl:
+        return redirect(url_for("templates_page"))
+    today = datetime.now().strftime("%Y-%m-%d")
+    return render_template("add_session.html", today=today, mode="template_edit", session_data=None, template_data=tmpl)
+
+
+@app.route("/templates/<template_id>/edit", methods=["POST"])
+@require_profile
+def templates_edit_post(template_id):
+    all_templates = load_templates()
+    tmpl = next((t for t in all_templates if t["id"] == template_id), None)
+    if not tmpl:
+        return jsonify({"success": False, "error": "Template introuvable"}), 404
+
+    data = request.get_json()
+    name = data.get("name", "").strip()
+    if not name:
+        return jsonify({"success": False, "error": "Nom du template requis"}), 400
+
+    updated = {"id": template_id, "name": name, "exercises": []}
+    for ex in data.get("exercises", []):
+        exercise = build_exercise_from_data(ex)
+        if exercise["name"] and exercise["sets"]:
+            updated["exercises"].append(exercise)
+
+    if not updated["exercises"]:
+        return jsonify({"success": False, "error": "Aucun exercice valide"}), 400
+
+    all_templates = [updated if t["id"] == template_id else t for t in all_templates]
+    save_templates(all_templates)
+    return jsonify({"success": True})
+
+
+@app.route("/templates/<template_id>/delete", methods=["POST"])
+@require_profile
+def templates_delete(template_id):
+    all_templates = [t for t in load_templates() if t["id"] != template_id]
+    save_templates(all_templates)
+    return redirect(url_for("templates_page"))
+
+
+@app.route("/api/templates")
+@require_profile
+def api_templates():
+    return jsonify(load_templates())
+
+
+@app.route("/api/templates/<template_id>/with-last-weights")
+@require_profile
+def api_template_with_last_weights(template_id):
+    all_templates = load_templates()
+    tmpl = next((t for t in all_templates if t["id"] == template_id), None)
+    if not tmpl:
+        return jsonify({"error": "Template introuvable"}), 404
+
+    sessions = load_sessions()
+    sessions_sorted = sorted(sessions, key=lambda s: s["date"], reverse=True)
+
+    result = {"id": tmpl["id"], "name": tmpl["name"], "exercises": []}
+    for ex in tmpl["exercises"]:
+        ex_copy = dict(ex)
+        for sess in sessions_sorted:
+            for sess_ex in sess["exercises"]:
+                if sess_ex["name"].lower() == ex["name"].lower() and sess_ex["sets"]:
+                    ex_copy = {**ex, "sets": sess_ex["sets"]}
+                    break
+            else:
+                continue
+            break
+        result["exercises"].append(ex_copy)
+
+    return jsonify(result)
 
 
 if __name__ == "__main__":

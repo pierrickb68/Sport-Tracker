@@ -133,6 +133,7 @@
       <li><a href="{{ url_for('index') }}"       class="{% if request.endpoint == 'index' %}active{% endif %}">Historique</a></li>
       <li><a href="{{ url_for('add_session') }}" class="{% if request.endpoint == 'add_session' %}active{% endif %}">+ Séance</a></li>
       <li><a href="{{ url_for('progression') }}" class="{% if request.endpoint == 'progression' %}active{% endif %}">Progression</a></li>
+      <li><a href="{{ url_for('templates_page') }}" class="{% if request.endpoint in ['templates_page', 'templates_new', 'templates_edit'] %}active{% endif %}">Templates</a></li>
       <li class="nav-sep" aria-hidden="true"></li>
       <li>
         <a href="{{ url_for('profiles') }}" class="nav-profile-link {% if request.endpoint == 'profiles' %}active{% endif %}">
