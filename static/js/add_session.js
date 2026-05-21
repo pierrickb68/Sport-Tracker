@@ -1,18 +1,93 @@
 const CONFIG = window.FORM_CONFIG || { mode: 'new' };
 let exerciseCount = 0;
 
-// ── Datalist: merge user exercises ────────────────────────────────────────────
+// ── Exercise name suggestions ─────────────────────────────────────────────────
+const EXERCISE_NAMES = [
+  'Développé couché', 'Développé incliné', 'Développé décliné',
+  'Squat', 'Leg press', 'Soulevé de terre',
+  'Tirage vertical', 'Rowing barre', 'Rowing haltère',
+  'Curl biceps barre', 'Curl biceps haltère', 'Extension triceps poulie',
+  'Dips', 'Développé militaire', 'Élévations latérales', 'Élévations frontales',
+  'Hip thrust', 'Fentes', 'Leg curl', 'Leg extension',
+  'Mollets debout', 'Abdos', 'Planche', 'Face pull',
+  'Oiseau haltère', 'Pec deck', 'Pull-over', 'Traction',
+  'Curl marteau', 'Skull crusher', 'Développé haltères',
+  'Shrug', 'Good morning', 'Romanian deadlift', 'Bulgarian split squat', 'Calf press'
+];
+
 fetch('/api/exercises').then(r => r.json()).then(names => {
-  const dl = document.getElementById('exercises-datalist');
-  const existing = new Set([...dl.options].map(o => o.value.toLowerCase()));
-  names.forEach(name => {
-    if (!existing.has(name.toLowerCase())) {
-      const opt = document.createElement('option');
-      opt.value = name;
-      dl.appendChild(opt);
+  const existing = new Set(EXERCISE_NAMES.map(n => n.toLowerCase()));
+  names.forEach(n => { if (!existing.has(n.toLowerCase())) EXERCISE_NAMES.push(n); });
+}).catch(() => {});
+
+function attachAutocomplete(input) {
+  const wrapper = input.closest('.exercise-autocomplete-wrapper');
+  let dropdown = null;
+
+  function getOrCreateDropdown() {
+    if (!dropdown) {
+      dropdown = document.createElement('div');
+      dropdown.className = 'exercise-suggestions hidden';
+      wrapper.appendChild(dropdown);
+    }
+    return dropdown;
+  }
+
+  function showSuggestions(query) {
+    const q = query.toLowerCase().trim();
+    if (q.length === 0) { hideDropdown(); return; }
+    const matches = EXERCISE_NAMES.filter(n => n.toLowerCase().includes(q)).slice(0, 8);
+    if (matches.length === 0) { hideDropdown(); return; }
+
+    const dd = getOrCreateDropdown();
+    dd.innerHTML = '';
+    matches.forEach(name => {
+      const item = document.createElement('div');
+      item.className = 'exercise-suggestion-item';
+      item.textContent = name;
+      item.addEventListener('mousedown', (e) => e.preventDefault()); // desktop: prevent blur
+      item.addEventListener('touchend', (e) => {
+        e.preventDefault(); // iOS: prevent ghost click and blur race
+        input.value = name;
+        hideDropdown();
+        input.blur();
+      });
+      item.addEventListener('click', () => {
+        input.value = name;
+        hideDropdown();
+      });
+      dd.appendChild(item);
+    });
+    dd.classList.remove('hidden');
+  }
+
+  function hideDropdown() {
+    if (dropdown) dropdown.classList.add('hidden');
+  }
+
+  input.addEventListener('input', () => showSuggestions(input.value));
+  input.addEventListener('focus', () => { if (input.value) showSuggestions(input.value); });
+  input.addEventListener('blur', () => setTimeout(hideDropdown, 150));
+  input.addEventListener('keydown', (e) => {
+    if (!dropdown || dropdown.classList.contains('hidden')) return;
+    const items = [...dropdown.querySelectorAll('.exercise-suggestion-item')];
+    const idx = items.findIndex(i => i.classList.contains('active'));
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      items.forEach(i => i.classList.remove('active'));
+      items[Math.min(idx + 1, items.length - 1)]?.classList.add('active');
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      items.forEach(i => i.classList.remove('active'));
+      items[Math.max(idx - 1, 0)]?.classList.add('active');
+    } else if (e.key === 'Enter') {
+      const active = dropdown.querySelector('.exercise-suggestion-item.active');
+      if (active) { e.preventDefault(); input.value = active.textContent; hideDropdown(); }
+    } else if (e.key === 'Escape') {
+      hideDropdown();
     }
   });
-}).catch(() => {});
+}
 
 // ── Exercise builder ──────────────────────────────────────────────────────────
 function addExercise(prefill = null) {
@@ -33,6 +108,7 @@ function addExercise(prefill = null) {
   });
 
   document.getElementById('exercises-container').appendChild(block);
+  attachAutocomplete(block.querySelector('.exercise-name-input'));
 
   if (prefill) {
     block.querySelector('.exercise-name-input').value = prefill.name || '';

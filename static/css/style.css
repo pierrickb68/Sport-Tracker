@@ -708,7 +708,7 @@ body {
 .exercise-name-row { display: flex; gap: 0.6rem; align-items: center; }
 
 .exercise-name-input {
-  flex: 1;
+  width: 100%;
   background: var(--black-raise) !important;
   border: 1px solid var(--border-up) !important;
   border-radius: var(--radius) !important;
@@ -721,6 +721,53 @@ body {
   transition: border-color var(--t) !important;
 }
 .exercise-name-input:focus { border-color: var(--red-dark) !important; }
+
+.exercise-autocomplete-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.exercise-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #1c1c1c;
+  border: 1px solid var(--border-up);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  z-index: 200;
+  max-height: 308px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+}
+
+.exercise-suggestions.hidden { display: none; }
+
+.exercise-suggestion-item {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 0.8rem;
+  cursor: pointer;
+  font-family: var(--f-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.exercise-suggestion-item:last-child { border-bottom: none; }
+
+.exercise-suggestion-item:hover,
+.exercise-suggestion-item.active {
+  background: var(--red-dim);
+  color: var(--red-bright);
+}
 
 .btn-remove-exercise {
   background: transparent;

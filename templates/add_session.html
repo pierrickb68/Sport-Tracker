@@ -110,7 +110,9 @@
   <div class="exercise-block" data-exercise-index="">
     <div class="exercise-block-header">
       <div class="exercise-name-row">
-        <input type="text" class="exercise-name-input" placeholder="Nom de l'exercice (ex : Développé couché)" list="exercises-datalist" required>
+        <div class="exercise-autocomplete-wrapper">
+          <input type="text" class="exercise-name-input" placeholder="Nom de l'exercice (ex : Développé couché)" autocomplete="off" required>
+        </div>
         <button type="button" class="btn-remove-exercise" title="Supprimer l'exercice">✕</button>
       </div>
       <div class="exercise-options">
@@ -153,45 +155,6 @@
     </div>
   </div>
 </template>
-
-<datalist id="exercises-datalist">
-  <option value="Développé couché">
-  <option value="Développé incliné">
-  <option value="Développé décliné">
-  <option value="Squat">
-  <option value="Leg press">
-  <option value="Soulevé de terre">
-  <option value="Tirage vertical">
-  <option value="Rowing barre">
-  <option value="Rowing haltère">
-  <option value="Curl biceps barre">
-  <option value="Curl biceps haltère">
-  <option value="Extension triceps poulie">
-  <option value="Dips">
-  <option value="Développé militaire">
-  <option value="Élévations latérales">
-  <option value="Élévations frontales">
-  <option value="Hip thrust">
-  <option value="Fentes">
-  <option value="Leg curl">
-  <option value="Leg extension">
-  <option value="Mollets debout">
-  <option value="Abdos">
-  <option value="Planche">
-  <option value="Face pull">
-  <option value="Oiseau haltère">
-  <option value="Pec deck">
-  <option value="Pull-over">
-  <option value="Traction">
-  <option value="Curl marteau">
-  <option value="Skull crusher">
-  <option value="Développé haltères">
-  <option value="Shrug">
-  <option value="Good morning">
-  <option value="Romanian deadlift">
-  <option value="Bulgarian split squat">
-  <option value="Calf press">
-</datalist>
 
 <!-- Pass config to JS -->
 <script>
