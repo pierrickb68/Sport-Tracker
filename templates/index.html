@@ -60,7 +60,7 @@
         <div class="sets-list">
           {% for s in ex.sets %}
           <div class="set-entry">
-            <div class="set-tag">{{ s.reps }} × {{ s.weight | int if s.weight == s.weight | int else s.weight }} kg</div>
+            <div class="set-tag">{{ s.reps }} × <span class="weight-neon">{{ s.weight | int if s.weight == s.weight | int else s.weight }} kg</span></div>
             {% if s.get('comment') %}
             <div class="note-display set-note-display">{{ s.comment }}</div>
             {% endif %}

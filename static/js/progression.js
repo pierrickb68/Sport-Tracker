@@ -1,11 +1,11 @@
 let chart = null;
 
 const COLORS = {
-  line: '#c9a84c',
-  fill: 'rgba(201, 168, 76, 0.06)',
-  point: '#e8c870',
-  grid: 'rgba(255, 255, 255, 0.035)',
-  text: '#888898'
+  line: '#00FF94',
+  fill: 'rgba(0, 255, 148, 0.06)',
+  point: '#00FF94',
+  grid: 'rgba(255, 255, 255, 0.04)',
+  text: '#666666'
 };
 
 const METRIC_LABELS = {
@@ -71,14 +71,14 @@ async function loadProgression() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#0d0d1e',
-          borderColor: '#1a1a2e',
+          backgroundColor: '#111111',
+          borderColor: '#2a2a2a',
           borderWidth: 1,
-          titleColor: '#ede8e0',
-          bodyColor: '#8888a4',
+          titleColor: '#ffffff',
+          bodyColor: '#888888',
           padding: 12,
-          titleFont: { family: 'Rajdhani', weight: '700', size: 13 },
-          bodyFont: { family: 'Rajdhani', size: 12 },
+          titleFont: { family: 'Inter', weight: '700', size: 13 },
+          bodyFont: { family: 'Inter', size: 12 },
           callbacks: {
             label: ctx => `${METRIC_LABELS[metric]}: ${ctx.parsed.y}`
           }
@@ -87,11 +87,11 @@ async function loadProgression() {
       scales: {
         x: {
           grid: { color: COLORS.grid },
-          ticks: { color: COLORS.text, font: { size: 11, family: 'Rajdhani', weight: '600' } }
+          ticks: { color: COLORS.text, font: { size: 11, family: 'Inter', weight: '600' } }
         },
         y: {
           grid: { color: COLORS.grid },
-          ticks: { color: COLORS.text, font: { size: 11, family: 'Rajdhani', weight: '600' } },
+          ticks: { color: COLORS.text, font: { size: 11, family: 'Inter', weight: '600' } },
           beginAtZero: false
         }
       }

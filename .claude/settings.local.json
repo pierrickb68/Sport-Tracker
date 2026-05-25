@@ -3,7 +3,13 @@
     "allow": [
       "PowerShell(Get-ChildItem \"C:\\\\Users\\\\Pierrick\\\\sport-tracker\" -ErrorAction SilentlyContinue; if \\(-not \\(Test-Path \"C:\\\\Users\\\\Pierrick\\\\sport-tracker\"\\)\\) { Write-Host \"Directory does not exist\" })",
       "Bash(Copy-Item *)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(curl -s http://127.0.0.1:5000/ -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -L http://127.0.0.1:5000/)",
+      "Bash(curl -s http://127.0.0.1:5000/static/css/style.css)",
+      "Bash(curl -s -c /tmp/cookies.txt -b /tmp/cookies.txt -X POST http://127.0.0.1:5000/profiles/select -d \"name=Pierrick\" -L)",
+      "Bash(curl -s -c /tmp/cookies.txt -b /tmp/cookies.txt -X POST \"http://127.0.0.1:5000/profiles/select\" --data-urlencode \"name=Pierrick\" -D -)",
+      "Bash(curl -s -b \"session=eyJwcm9maWxlIjoiUGllcnJpY2sifQ.ahQp3Q.JikPm9R74685oo9nfKRs3yHSRis\" http://127.0.0.1:5000/)"
     ]
   }
 }
