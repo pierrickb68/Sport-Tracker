@@ -11,14 +11,28 @@
 
   <div class="profiles-grid">
     {% for profile in profiles %}
-    <form method="POST" action="{{ url_for('select_profile') }}" style="display:contents">
-      <input type="hidden" name="name" value="{{ profile.name }}">
-      <button type="submit" class="profile-card{% if current_profile == profile.name %} profile-card-active{% endif %}">
-        <div class="profile-avatar">{{ profile.name[0].upper() }}</div>
-        <div class="profile-name">{{ profile.name }}</div>
-        <div class="profile-count">{{ profile.count }} séance{% if profile.count != 1 %}s{% endif %}</div>
-      </button>
-    </form>
+    <div class="profile-card-wrapper">
+      <form method="POST" action="{{ url_for('select_profile') }}" style="display:contents">
+        <input type="hidden" name="name" value="{{ profile.name }}">
+        <button type="submit" class="profile-card{% if current_profile == profile.name %} profile-card-active{% endif %}">
+          <div class="profile-avatar" data-profile="{{ profile.name }}">
+            {% if profile.avatar_url %}
+            <img src="{{ profile.avatar_url }}" alt="{{ profile.name }}">
+            {% else %}
+            {{ profile.name[0].upper() }}
+            {% endif %}
+          </div>
+          <div class="profile-name">{{ profile.name }}</div>
+          <div class="profile-count">{{ profile.count }} séance{% if profile.count != 1 %}s{% endif %}</div>
+        </button>
+      </form>
+      <div class="avatar-upload-btn" data-profile="{{ profile.name }}" title="Changer la photo de profil">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </div>
+    </div>
     {% endfor %}
 
     <button type="button" class="profile-card profile-card-new" id="btn-new-profile">
@@ -39,36 +53,71 @@
     </form>
   </div>
 
+  {% for profile in profiles %}
+  <input type="file" id="file-{{ profile.name }}" class="profile-file-input" data-profile="{{ profile.name }}"
+         accept=".jpg,.jpeg,.png,.webp" style="display:none">
+  {% endfor %}
+
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
 (function () {
-  const btn     = document.getElementById('btn-new-profile');
-  const cancel  = document.getElementById('btn-cancel-new');
-  const form    = document.getElementById('new-profile-form');
-  const input   = document.getElementById('new-profile-name');
+  const btn    = document.getElementById('btn-new-profile');
+  const cancel = document.getElementById('btn-cancel-new');
+  const form   = document.getElementById('new-profile-form');
+  const input  = document.getElementById('new-profile-name');
 
-  function show() {
-    form.classList.remove('hidden');
-    btn.classList.add('active');
-    input.focus();
-  }
-  function hide() {
-    form.classList.add('hidden');
-    btn.classList.remove('active');
-    input.value = '';
-  }
+  function show() { form.classList.remove('hidden'); btn.classList.add('active'); input.focus(); }
+  function hide() { form.classList.add('hidden'); btn.classList.remove('active'); input.value = ''; }
 
-  btn.addEventListener('click', function () {
-    form.classList.contains('hidden') ? show() : hide();
-  });
+  btn.addEventListener('click', function () { form.classList.contains('hidden') ? show() : hide(); });
   cancel.addEventListener('click', hide);
+  input.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
 
-  // Submit on Enter
-  input.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') hide();
+  // ── Avatar upload ──────────────────────────────────────────────────────────
+  document.querySelectorAll('.avatar-upload-btn').forEach(function (uploadBtn) {
+    uploadBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      const name = this.dataset.profile;
+      document.getElementById('file-' + name).click();
+    });
+  });
+
+  document.querySelectorAll('.profile-file-input').forEach(function (fileInput) {
+    fileInput.addEventListener('change', async function () {
+      const file = this.files[0];
+      if (!file) return;
+      const name = this.dataset.profile;
+
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Fichier trop volumineux (max 2 Mo)', 'error');
+        this.value = '';
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append('avatar', file);
+
+      try {
+        const res  = await fetch('/profiles/' + encodeURIComponent(name) + '/upload-avatar', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) {
+          const avatarEl = document.querySelector('.profile-avatar[data-profile="' + name + '"]');
+          if (avatarEl) {
+            avatarEl.innerHTML = '<img src="' + data.url + '&t=' + Date.now() + '" alt="' + name + '">';
+          }
+          showToast('Photo de profil mise à jour !');
+        } else {
+          showToast(data.error || 'Erreur lors de l\'upload', 'error');
+        }
+      } catch (err) {
+        showToast('Erreur de connexion', 'error');
+      }
+      this.value = '';
+    });
   });
 })();
 </script>

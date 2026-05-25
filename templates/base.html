@@ -133,7 +133,11 @@
       <li class="nav-sep" aria-hidden="true"></li>
       <li>
         <a href="{{ url_for('profiles') }}" class="nav-profile-link {% if request.endpoint == 'profiles' %}active{% endif %}">
+          {% if current_avatar_url %}
+          <img src="{{ current_avatar_url }}" alt="{{ current_profile }}" class="nav-avatar-img">
+          {% else %}
           <span class="nav-profile-initial">{{ current_profile[0].upper() }}</span>
+          {% endif %}
           <span>{{ current_profile }}</span>
         </a>
       </li>

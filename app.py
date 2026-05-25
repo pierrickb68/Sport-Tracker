@@ -1,3 +1,4 @@
+import io
 import json
 import os
 import re
@@ -10,9 +11,20 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'soul-tracker-dev-secret-2024')
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+AVATAR_DIR = os.path.join(os.path.dirname(__file__), "static", "avatars")
+AVATAR_MAX_SIZE = 2 * 1024 * 1024  # 2 MB
+AVATAR_ALLOWED_EXT = {'.jpg', '.jpeg', '.png', '.webp'}
 
 
 # ── Profile helpers ──────────────────────────────────────────────────────────
+
+def get_avatar_url(name):
+    path = os.path.join(AVATAR_DIR, f"avatar_{name}.jpg")
+    if not os.path.exists(path):
+        return None
+    mtime = int(os.path.getmtime(path))
+    return url_for("static", filename=f"avatars/avatar_{name}.jpg", v=mtime)
+
 
 def get_profiles():
     profiles = []
@@ -29,7 +41,7 @@ def get_profiles():
                     count = len(json.load(fp))
             except Exception:
                 count = 0
-            profiles.append({"name": name, "count": count})
+            profiles.append({"name": name, "count": count, "avatar_url": get_avatar_url(name)})
     return profiles
 
 
@@ -55,7 +67,11 @@ def require_profile(f):
 
 @app.context_processor
 def inject_profile():
-    return {'current_profile': flask_session.get('profile')}
+    profile = flask_session.get('profile')
+    return {
+        'current_profile': profile,
+        'current_avatar_url': get_avatar_url(profile) if profile else None,
+    }
 
 
 # ── Data I/O ─────────────────────────────────────────────────────────────────
@@ -152,6 +168,40 @@ def new_profile():
         flask_session['profile'] = name
         return redirect(url_for('index'))
     return redirect(url_for('profiles'))
+
+
+@app.route("/profiles/<name>/upload-avatar", methods=["POST"])
+def upload_avatar(name):
+    valid = [p["name"] for p in get_profiles()]
+    if name not in valid:
+        return jsonify({"success": False, "error": "Profil introuvable"}), 404
+
+    file = request.files.get("avatar")
+    if not file or file.filename == "":
+        return jsonify({"success": False, "error": "Aucun fichier fourni"}), 400
+
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in AVATAR_ALLOWED_EXT:
+        return jsonify({"success": False, "error": "Format non supporté (jpg, png, webp)"}), 400
+
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+    if size > AVATAR_MAX_SIZE:
+        return jsonify({"success": False, "error": "Fichier trop volumineux (max 2 Mo)"}), 400
+
+    try:
+        from PIL import Image
+        img = Image.open(io.BytesIO(file.read()))
+        img = img.convert("RGB")
+        img.thumbnail((512, 512), Image.LANCZOS)
+        os.makedirs(AVATAR_DIR, exist_ok=True)
+        dest = os.path.join(AVATAR_DIR, f"avatar_{name}.jpg")
+        img.save(dest, "JPEG", quality=88)
+    except Exception:
+        return jsonify({"success": False, "error": "Erreur lors du traitement de l'image"}), 500
+
+    return jsonify({"success": True, "url": get_avatar_url(name)})
 
 
 # ── App routes ────────────────────────────────────────────────────────────────
