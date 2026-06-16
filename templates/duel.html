@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Duel — Soul Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Duel</h1>
+    <p class="page-subtitle">Classement sur les 30 derniers jours</p>
+  </div>
+</div>
+
+<div id="duel-loading" class="duel-loading">
+  <div class="duel-spinner"></div>
+  <p>Calcul du classement...</p>
+</div>
+
+<div id="duel-content" class="hidden">
+  <div id="podium-section" class="podium-section hidden"></div>
+  <div id="ranking-list" class="ranking-list"></div>
+</div>
+
+<div id="duel-empty" class="empty-state hidden">
+  <span class="empty-icon">&#9876;</span>
+  <h2>Pas encore de concurrence</h2>
+  <p>Créez au moins deux profils pour activer le classement.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.DUEL_CONFIG = { profile: {{ current_profile | tojson }} };
+</script>
+<script src="{{ url_for('static', filename='js/duel.js') }}"></script>
+{% endblock %}

@@ -19,6 +19,19 @@
   </h1>
 </div>
 
+{% if mode == 'new' %}
+<div id="draft-banner" class="draft-banner hidden" role="alert">
+  <div class="draft-banner-content">
+    <span class="draft-banner-icon">&#128221;</span>
+    <span id="draft-banner-msg">Brouillon non terminé détecté</span>
+  </div>
+  <div class="draft-banner-actions">
+    <button type="button" id="draft-resume-btn" class="btn btn-primary btn-sm">Reprendre</button>
+    <button type="button" id="draft-ignore-btn" class="btn btn-ghost btn-sm">Ignorer</button>
+  </div>
+</div>
+{% endif %}
+
 <div class="form-container">
   {% if mode in ['template_new', 'template_edit'] %}
   <div class="form-group">
@@ -160,6 +173,7 @@
 <script>
 window.FORM_CONFIG = {
   mode: {{ mode | tojson }},
+  profile: {{ current_profile | tojson }},
   {% if mode == 'edit' and session_data %}
   sessionId: {{ session_data.id | tojson }},
   sessionData: {{ session_data | tojson }},

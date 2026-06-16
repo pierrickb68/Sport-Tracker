@@ -451,6 +451,59 @@ def api_templates():
     return jsonify(load_templates())
 
 
+@app.route("/duel")
+@require_profile
+def duel():
+    return render_template("duel.html")
+
+
+@app.route("/api/duel")
+@require_profile
+def api_duel():
+    from datetime import date, timedelta
+    today = date.today()
+    cutoff = (today - timedelta(days=30)).isoformat()
+
+    result = []
+    for p in get_profiles():
+        path = get_data_file(p["name"])
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                sessions = json.load(f)
+        except Exception:
+            sessions = []
+
+        recent = [s for s in sessions if s["date"] >= cutoff]
+        sessions_30d = len(recent)
+
+        volume_30d = 0
+        for sess in recent:
+            for ex in sess.get("exercises", []):
+                mult = 2 if ex.get("unilateral", False) else 1
+                for s in ex.get("sets", []):
+                    volume_30d += s.get("weight", 0) * s.get("reps", 0) * mult
+
+        dates_set = set(s["date"] for s in sessions)
+        streak = 0
+        check = today
+        if today.isoformat() not in dates_set:
+            check = today - timedelta(days=1)
+        while check.isoformat() in dates_set:
+            streak += 1
+            check = check - timedelta(days=1)
+
+        result.append({
+            "name": p["name"],
+            "avatar_url": p.get("avatar_url"),
+            "sessions_30d": sessions_30d,
+            "volume_30d": round(volume_30d),
+            "streak": streak,
+        })
+
+    result.sort(key=lambda x: (-x["sessions_30d"], -x["volume_30d"], -x["streak"]))
+    return jsonify(result)
+
+
 @app.route("/api/templates/<template_id>/with-last-weights")
 @require_profile
 def api_template_with_last_weights(template_id):

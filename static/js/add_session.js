@@ -316,6 +316,58 @@ if (CONFIG.mode !== 'template_new' && CONFIG.mode !== 'template_edit') {
   });
 }
 
+// ── Draft auto-save (new session only) ───────────────────────────────────────
+if (CONFIG.mode === 'new' && CONFIG.profile) {
+  const DRAFT_KEY = `soultracker_draft_${CONFIG.profile}`;
+
+  function saveDraft() {
+    const exercises = collectExercises();
+    const date = document.getElementById('date')?.value || '';
+    const notes = document.getElementById('notes')?.value || '';
+    if (!exercises.length && !notes) return;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      savedAt: new Date().toISOString(), date, notes, exercises
+    }));
+  }
+
+  function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
+  window.__clearDraft = clearDraft;
+
+  const raw = localStorage.getItem(DRAFT_KEY);
+  if (raw) {
+    try {
+      const draft = JSON.parse(raw);
+      const banner = document.getElementById('draft-banner');
+      const msg = document.getElementById('draft-banner-msg');
+      if (banner && msg && draft.savedAt) {
+        const dt = new Date(draft.savedAt);
+        const d = dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const t = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        msg.textContent = `Brouillon non terminé du ${d} à ${t} — voulez-vous le reprendre ?`;
+        banner.classList.remove('hidden');
+
+        document.getElementById('draft-resume-btn').addEventListener('click', () => {
+          if (draft.date) document.getElementById('date').value = draft.date;
+          if (draft.notes) document.getElementById('notes').value = draft.notes;
+          prefillExercises(draft.exercises || []);
+          banner.classList.add('hidden');
+        });
+
+        document.getElementById('draft-ignore-btn').addEventListener('click', () => {
+          clearDraft();
+          banner.classList.add('hidden');
+        });
+      }
+    } catch { localStorage.removeItem(DRAFT_KEY); }
+  }
+
+  setInterval(saveDraft, 30000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveDraft();
+  });
+  window.addEventListener('beforeunload', saveDraft);
+}
+
 // ── Form submit ───────────────────────────────────────────────────────────────
 document.getElementById('session-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -356,6 +408,7 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
     });
 
     if (res.ok) {
+      window.__clearDraft?.();
       showToast(isTemplate ? 'Template sauvegardé !' : 'Séance enregistrée !');
       setTimeout(() => {
         window.location.href = isTemplate ? '/templates' : '/';
