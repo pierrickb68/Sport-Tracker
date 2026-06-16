@@ -32,6 +32,16 @@
           <circle cx="12" cy="13" r="4"/>
         </svg>
       </div>
+      {% if profiles|length > 1 %}
+      <button type="button" class="profile-delete-btn" data-profile="{{ profile.name }}" title="Supprimer le profil">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6M14 11v6"/>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      </button>
+      {% endif %}
     </div>
     {% endfor %}
 
@@ -59,6 +69,17 @@
   {% endfor %}
 
 </div>
+
+<div id="delete-profile-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-title">Supprimer le profil</div>
+    <p id="delete-profile-msg" style="color:var(--text);font-size:0.88rem;line-height:1.6;"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="delete-profile-cancel">Annuler</button>
+      <button type="button" class="btn btn-danger" id="delete-profile-confirm">Supprimer</button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -85,6 +106,56 @@
       document.getElementById('file-' + name).click();
     });
   });
+
+  // ── Delete profile ────────────────────────────────────────────────────────
+  (function () {
+    const modal      = document.getElementById('delete-profile-modal');
+    const msgEl      = document.getElementById('delete-profile-msg');
+    const confirmBtn = document.getElementById('delete-profile-confirm');
+    const cancelBtn  = document.getElementById('delete-profile-cancel');
+    let pendingName  = null;
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      pendingName = null;
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Supprimer';
+    }
+
+    document.querySelectorAll('.profile-delete-btn').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        pendingName = this.dataset.profile;
+        msgEl.innerHTML = 'Supprimer le profil <strong>' + pendingName + '</strong> et toutes ses données&nbsp;? Cette action est irréversible.';
+        modal.classList.remove('hidden');
+      });
+    });
+
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
+
+    confirmBtn.addEventListener('click', async function () {
+      if (!pendingName) return;
+      const name = pendingName;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '…';
+      try {
+        const res  = await fetch('/profiles/' + encodeURIComponent(name) + '/delete', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          location.reload();
+        } else {
+          showToast(data.error || 'Erreur lors de la suppression', 'error');
+          closeModal();
+        }
+      } catch (err) {
+        showToast('Erreur de connexion', 'error');
+        closeModal();
+      }
+    });
+  })();
 
   document.querySelectorAll('.profile-file-input').forEach(function (fileInput) {
     fileInput.addEventListener('change', async function () {

@@ -170,6 +170,34 @@ def new_profile():
     return redirect(url_for('profiles'))
 
 
+@app.route("/profiles/<name>/delete", methods=["POST"])
+def delete_profile(name):
+    profiles = get_profiles()
+    if len(profiles) <= 1:
+        return jsonify({"success": False, "error": "Impossible de supprimer le seul profil restant"}), 400
+
+    valid = [p["name"] for p in profiles]
+    if name not in valid:
+        return jsonify({"success": False, "error": "Profil introuvable"}), 404
+
+    sessions_path = get_data_file(name)
+    if os.path.exists(sessions_path):
+        os.remove(sessions_path)
+
+    templates_path = os.path.join(DATA_DIR, f"templates_{name}.json")
+    if os.path.exists(templates_path):
+        os.remove(templates_path)
+
+    avatar_path = os.path.join(AVATAR_DIR, f"avatar_{name}.jpg")
+    if os.path.exists(avatar_path):
+        os.remove(avatar_path)
+
+    if flask_session.get('profile') == name:
+        flask_session.pop('profile', None)
+
+    return jsonify({"success": True})
+
+
 @app.route("/profiles/<name>/upload-avatar", methods=["POST"])
 def upload_avatar(name):
     valid = [p["name"] for p in get_profiles()]
@@ -463,6 +491,8 @@ def api_duel():
     from datetime import date, timedelta
     today = date.today()
     cutoff = (today - timedelta(days=30)).isoformat()
+    month_start = today.replace(day=1).isoformat()
+    days_fr = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
     result = []
     for p in get_profiles():
@@ -473,6 +503,7 @@ def api_duel():
         except Exception:
             sessions = []
 
+        # 30-day metrics
         recent = [s for s in sessions if s["date"] >= cutoff]
         sessions_30d = len(recent)
 
@@ -483,6 +514,7 @@ def api_duel():
                 for s in ex.get("sets", []):
                     volume_30d += s.get("weight", 0) * s.get("reps", 0) * mult
 
+        # Streak
         dates_set = set(s["date"] for s in sessions)
         streak = 0
         check = today
@@ -492,12 +524,68 @@ def api_duel():
             streak += 1
             check = check - timedelta(days=1)
 
+        # Monthly metrics
+        month_sess = [s for s in sessions if s["date"] >= month_start]
+        sessions_month = len(month_sess)
+
+        volume_month = 0
+        for sess in month_sess:
+            for ex in sess.get("exercises", []):
+                mult = 2 if ex.get("unilateral", False) else 1
+                for s in ex.get("sets", []):
+                    volume_month += s.get("weight", 0) * s.get("reps", 0) * mult
+
+        # Favorite exercise this month
+        ex_counts = {}
+        for sess in month_sess:
+            for ex in sess.get("exercises", []):
+                n = ex.get("name", "").strip()
+                if n:
+                    ex_counts[n] = ex_counts.get(n, 0) + 1
+        fav_exercise = max(ex_counts, key=ex_counts.get) if ex_counts else None
+
+        # Favorite day of week this month
+        day_counts = {}
+        for sess in month_sess:
+            try:
+                d = date.fromisoformat(sess["date"])
+                day = days_fr[d.weekday()]
+                day_counts[day] = day_counts.get(day, 0) + 1
+            except Exception:
+                pass
+        fav_day = max(day_counts, key=day_counts.get) if day_counts else None
+
+        # Average weight progression: max weight per exercise, first vs last session of month
+        weight_progress = None
+        if len(month_sess) >= 2:
+            sorted_m = sorted(month_sess, key=lambda s: s["date"])
+            first_s, last_s = sorted_m[0], sorted_m[-1]
+
+            def max_weights(sess):
+                d = {}
+                for ex in sess.get("exercises", []):
+                    sets = [s.get("weight", 0) for s in ex.get("sets", [])]
+                    if sets:
+                        d[ex["name"].lower()] = max(sets)
+                return d
+
+            fw, lw = max_weights(first_s), max_weights(last_s)
+            common = set(fw) & set(lw)
+            deltas = [(lw[n] - fw[n]) / fw[n] * 100 for n in common if fw[n] > 0]
+            if deltas:
+                weight_progress = round(sum(deltas) / len(deltas), 1)
+
         result.append({
             "name": p["name"],
             "avatar_url": p.get("avatar_url"),
             "sessions_30d": sessions_30d,
             "volume_30d": round(volume_30d),
             "streak": streak,
+            "sessions_month": sessions_month,
+            "volume_month": round(volume_month),
+            "fav_exercise": fav_exercise,
+            "fav_day": fav_day,
+            "weight_progress": weight_progress,
         })
 
     result.sort(key=lambda x: (-x["sessions_30d"], -x["volume_30d"], -x["streak"]))
